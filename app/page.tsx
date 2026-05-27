@@ -27,6 +27,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [visibleTiers, setVisibleTiers] = useState<Set<string>>(
+    new Set(["1", "2", "3", "DQ"])
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
@@ -48,6 +51,14 @@ export default function Home() {
         setParsedLeads(leads);
         setFileName(file.name);
       },
+    });
+  };
+
+  const toggleTier = (tier: string) => {
+    setVisibleTiers(prev => {
+      const next = new Set(prev);
+      if (next.has(tier)) next.delete(tier); else next.add(tier);
+      return next;
     });
   };
 
@@ -115,6 +126,10 @@ export default function Home() {
     }
     return badges;
   };
+
+  const filteredResults = results.filter(r =>
+    r.error || (r.tier && visibleTiers.has(r.tier))
+  );
 
   const tierCount = (tier: string) => results.filter((r) => r.tier === tier).length;
 
@@ -203,16 +218,52 @@ export default function Home() {
                 <span className="text-red-700 font-medium">DQ: {tierCount("DQ")}</span>
               </div>
               <button
-                onClick={() => exportToCsv(rawRows, results)}
+                onClick={() => {
+                  const filteredPairs = results
+                    .map((r, i) => ({ r, raw: rawRows[i] }))
+                    .filter(({ r }) => !r.error && r.tier && visibleTiers.has(r.tier));
+                  exportToCsv(filteredPairs.map(p => p.raw), filteredPairs.map(p => p.r));
+                }}
                 className="px-4 py-1.5 text-sm bg-black text-white rounded-md hover:bg-gray-800"
               >
                 ⬇ Export CSV
               </button>
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900">Results ({results.length})</h2>
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap gap-2 items-center">
+                {(["1", "2", "3", "DQ"] as const).map((tier) => {
+                  const active = visibleTiers.has(tier);
+                  const activeClass =
+                    tier === "1" ? "bg-green-100 text-green-800" :
+                    tier === "2" ? "bg-yellow-100 text-yellow-800" :
+                    tier === "3" ? "bg-gray-100 text-gray-800" :
+                    "bg-red-100 text-red-800";
+                  const inactiveClass =
+                    tier === "1" ? "bg-white text-green-800 border border-green-300 opacity-50" :
+                    tier === "2" ? "bg-white text-yellow-800 border border-yellow-300 opacity-50" :
+                    tier === "3" ? "bg-white text-gray-800 border border-gray-300 opacity-50" :
+                    "bg-white text-red-800 border border-red-300 opacity-50";
+                  return (
+                    <button
+                      key={tier}
+                      onClick={() => toggleTier(tier)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium cursor-pointer ${active ? activeClass : inactiveClass}`}
+                    >
+                      {tier === "DQ" ? "DQ" : `Tier ${tier}`}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-xs text-gray-500">
+                Showing {filteredResults.filter(r => !r.error).length} of {results.filter(r => !r.error).length} leads
+                {results.some(r => r.error) && ` · ${results.filter(r => r.error).length} error(s)`}
+              </span>
+            </div>
 
-            {results.map((r, i) => (
+            <h2 className="text-xl font-semibold text-gray-900">Results ({filteredResults.length})</h2>
+
+            {filteredResults.map((r, i) => (
               <div key={i} className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
                 <div className="flex items-start justify-between mb-2">
                   <div>
