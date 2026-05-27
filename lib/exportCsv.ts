@@ -56,7 +56,7 @@ export function exportToCsv(
   URL.revokeObjectURL(url);
 }
 
-type RecommendationsResponse = {
+export type RecommendationsResponse = {
   summary: string;
   sourcing_suggestions: { category: string; finding: string; action: string }[];
   rubric_gaps: { type: string; finding: string; suggested_text: string }[];
@@ -67,8 +67,9 @@ export function exportMarkdown(
   leadCount: number,
   filename?: string
 ): void {
-  const date = new Date().toISOString().slice(0, 10);
-  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+  const iso = new Date().toISOString();
+  const date = iso.slice(0, 10);
+  const timestamp = iso.slice(0, 19).replace("T", " ") + " UTC";
 
   const lines: string[] = [
     "# Lead Search Recommendations",
