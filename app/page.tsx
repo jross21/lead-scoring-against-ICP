@@ -121,7 +121,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Inbound Lead Triage</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Lead Scoring Against ICP</h1>
         <p className="text-gray-600 mb-8">
           Upload a CSV export from your CRM — any column structure works. Each lead is scored against your ICP rubric using Claude.
         </p>

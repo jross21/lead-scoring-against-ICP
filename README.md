@@ -1,4 +1,4 @@
-# Lead Triage
+# Lead Scoring Against ICP
 
 Score inbound leads against your ICP rubric using Claude. Upload a CSV from any CRM, get back Tier 1 / Tier 2 / Tier 3 / DQ scores with rationale, matched signals, and disqualifiers — then export the enriched CSV.
 

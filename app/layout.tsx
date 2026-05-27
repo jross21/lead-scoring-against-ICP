@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lead Triage",
+  title: "Lead Scoring Against ICP",
   description: "Score inbound leads against your ICP rubric using Claude",
 };
 
