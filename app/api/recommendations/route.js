@@ -21,6 +21,13 @@ export async function POST(request) {
       );
     }
 
+    if (leads.length > 200) {
+      return Response.json(
+        { error: "Provide at most 200 leads for analysis" },
+        { status: 400 }
+      );
+    }
+
     const prompt = `You are a B2B sales operations expert. Analyze these low-quality leads (Tier 3 and Disqualified) that failed to match our ICP, along with our scoring rubric. Identify patterns and return two types of recommendations.
 
 <rubric>
@@ -28,7 +35,9 @@ ${rubric}
 </rubric>
 
 <low_quality_leads>
-${JSON.stringify(leads, null, 2)}
+${JSON.stringify(leads.map(({ tier, score, rationale, disqualifiers, inferred_facts }) => ({
+  tier, score, rationale, disqualifiers, inferred_facts
+})), null, 2)}
 </low_quality_leads>
 
 Return JSON only, no preamble. Match this schema exactly:
