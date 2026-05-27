@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Papa from "papaparse";
 import { mapColumns, applyMap, type ColumnMap, type MappedLead } from "@/lib/mapColumns";
-import { exportToCsv } from "@/lib/exportCsv";
+import { exportToCsv, exportMarkdown, type RecommendationsResponse } from "@/lib/exportCsv";
 
 type ScoringResult = {
   input: MappedLead;
@@ -31,6 +31,9 @@ export default function Home() {
     new Set(["1", "2", "3", "DQ"])
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [recommendations, setRecommendations] = useState<RecommendationsResponse | null>(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
 
   const handleFile = (file: File) => {
     if (!file.name.endsWith(".csv")) {
@@ -99,6 +102,37 @@ export default function Home() {
     }
 
     setLoading(false);
+  };
+
+  const handleRecommend = async () => {
+    const lowQualityLeads = results.filter(
+      (r) => !r.error && (r.tier === "3" || r.tier === "DQ")
+    );
+    if (lowQualityLeads.length === 0) return;
+
+    setRecommendationsLoading(true);
+    setRecommendationsError(null);
+    setRecommendations(null);
+
+    try {
+      const response = await fetch("/api/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leads: lowQualityLeads }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setRecommendationsError(data.error || "Something went wrong");
+      } else {
+        setRecommendations(data);
+      }
+    } catch (e: unknown) {
+      setRecommendationsError(e instanceof Error ? e.message : "Unknown error");
+    }
+
+    setRecommendationsLoading(false);
   };
 
   const tierColor = (tier?: string) => {
@@ -217,18 +251,91 @@ export default function Home() {
                 <span>·</span>
                 <span className="text-red-700 font-medium">DQ: {tierCount("DQ")}</span>
               </div>
-              <button
-                onClick={() => {
-                  const filteredPairs = results
-                    .map((r, i) => ({ r, raw: rawRows[i] }))
-                    .filter(({ r }) => !r.error && r.tier && visibleTiers.has(r.tier));
-                  exportToCsv(filteredPairs.map(p => p.raw), filteredPairs.map(p => p.r));
-                }}
-                className="px-4 py-1.5 text-sm bg-black text-white rounded-md hover:bg-gray-800"
-              >
-                ⬇ Export CSV
-              </button>
+              <div className="flex gap-2">
+                {results.some((r) => !r.error && (r.tier === "3" || r.tier === "DQ")) && (
+                  <button
+                    onClick={handleRecommend}
+                    disabled={recommendationsLoading}
+                    className="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed"
+                  >
+                    {recommendationsLoading ? "Analyzing…" : "Analyze & Recommend"}
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    const filteredPairs = results
+                      .map((r, i) => ({ r, raw: rawRows[i] }))
+                      .filter(({ r }) => !r.error && r.tier && visibleTiers.has(r.tier));
+                    exportToCsv(filteredPairs.map(p => p.raw), filteredPairs.map(p => p.r));
+                  }}
+                  className="px-4 py-1.5 text-sm bg-black text-white rounded-md hover:bg-gray-800"
+                >
+                  ⬇ Export CSV
+                </button>
+              </div>
             </div>
+
+            {recommendationsError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm flex items-center justify-between">
+                <span>Recommendations error: {recommendationsError}</span>
+                <button onClick={handleRecommend} className="ml-4 underline text-red-700 hover:text-red-900">
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {recommendations && (
+              <div className="bg-white border border-indigo-200 rounded-lg p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900">Search Refinement Recommendations</h3>
+                  <button
+                    onClick={() => {
+                      const lowCount = results.filter(
+                        (r) => !r.error && (r.tier === "3" || r.tier === "DQ")
+                      ).length;
+                      exportMarkdown(recommendations, lowCount);
+                    }}
+                    className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  >
+                    ⬇ Download .md
+                  </button>
+                </div>
+
+                <p className="text-sm text-gray-700">{recommendations.summary}</p>
+
+                {recommendations.sourcing_suggestions.length > 0 && (
+                  <details open>
+                    <summary className="font-medium text-sm text-gray-900 cursor-pointer select-none">
+                      Sourcing Suggestions ({recommendations.sourcing_suggestions.length})
+                    </summary>
+                    <ul className="mt-2 space-y-2">
+                      {recommendations.sourcing_suggestions.map((s, i) => (
+                        <li key={i} className="text-sm text-gray-700 pl-3 border-l-2 border-indigo-200">
+                          <span className="font-medium text-gray-900">{s.category}:</span> {s.finding}
+                          <div className="text-indigo-700 mt-0.5">→ {s.action}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+
+                {recommendations.rubric_gaps.length > 0 && (
+                  <details open>
+                    <summary className="font-medium text-sm text-gray-900 cursor-pointer select-none">
+                      Rubric Gaps ({recommendations.rubric_gaps.length})
+                    </summary>
+                    <ul className="mt-2 space-y-2">
+                      {recommendations.rubric_gaps.map((g, i) => (
+                        <li key={i} className="text-sm text-gray-700 pl-3 border-l-2 border-yellow-300">
+                          <span className="font-medium text-gray-900 capitalize">{g.type.replace("_", " ")}:</span> {g.finding}
+                          <div className="text-yellow-700 mt-0.5 font-mono text-xs bg-yellow-50 rounded px-2 py-1">{g.suggested_text}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col gap-1">
               <div className="flex flex-wrap gap-2 items-center">
