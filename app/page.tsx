@@ -76,6 +76,8 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setResults([]);
+    setRecommendations(null);
+    setRecommendationsError(null);
 
     if (parsedLeads.length === 0) {
       setError("Upload a CSV file with at least one lead");
@@ -130,9 +132,9 @@ export default function Home() {
       }
     } catch (e: unknown) {
       setRecommendationsError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setRecommendationsLoading(false);
     }
-
-    setRecommendationsLoading(false);
   };
 
   const tierColor = (tier?: string) => {
@@ -327,7 +329,7 @@ export default function Home() {
                     <ul className="mt-2 space-y-2">
                       {recommendations.rubric_gaps.map((g, i) => (
                         <li key={i} className="text-sm text-gray-700 pl-3 border-l-2 border-yellow-300">
-                          <span className="font-medium text-gray-900 capitalize">{g.type.replace("_", " ")}:</span> {g.finding}
+                          <span className="font-medium text-gray-900 capitalize">{g.type.replace(/_/g, " ")}:</span> {g.finding}
                           <div className="text-yellow-700 mt-0.5 font-mono text-xs bg-yellow-50 rounded px-2 py-1">{g.suggested_text}</div>
                         </li>
                       ))}
