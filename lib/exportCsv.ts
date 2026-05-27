@@ -55,3 +55,46 @@ export function exportToCsv(
   a.click();
   URL.revokeObjectURL(url);
 }
+
+type RecommendationsResponse = {
+  summary: string;
+  sourcing_suggestions: { category: string; finding: string; action: string }[];
+  rubric_gaps: { type: string; finding: string; suggested_text: string }[];
+};
+
+export function exportMarkdown(
+  recommendations: RecommendationsResponse,
+  leadCount: number,
+  filename?: string
+): void {
+  const date = new Date().toISOString().slice(0, 10);
+  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+
+  const lines: string[] = [
+    "# Lead Search Recommendations",
+    `Generated: ${timestamp}`,
+    `Batch: ${leadCount} Tier 3 + DQ leads analyzed`,
+    "",
+    "## Summary",
+    recommendations.summary,
+    "",
+    "## Sourcing Suggestions",
+    ...recommendations.sourcing_suggestions.map(
+      (s) => `- **${s.category}**: ${s.finding} → ${s.action}`
+    ),
+    "",
+    "## Rubric Gaps",
+    ...recommendations.rubric_gaps.map(
+      (g) => `- **${g.type}**: ${g.finding}\n  Suggested addition: ${g.suggested_text}`
+    ),
+  ];
+
+  const content = lines.join("\n");
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename ?? `lead-recommendations-${date}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}

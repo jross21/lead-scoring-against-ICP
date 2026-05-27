@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { exportToCsv } from "../exportCsv";
+import { exportToCsv, exportMarkdown } from "../exportCsv";
 
 let capturedContent = "";
 let capturedFilename = "";
@@ -105,5 +105,59 @@ describe("exportToCsv", () => {
   it("generates a date-based filename when none provided", () => {
     exportToCsv(sampleRaw, sampleResult);
     expect(capturedFilename).toMatch(/^scored-leads-\d{4}-\d{2}-\d{2}\.csv$/);
+  });
+});
+
+const sampleRecommendations = {
+  summary: "Most leads are small B2C companies.",
+  sourcing_suggestions: [
+    {
+      category: "Industry",
+      finding: "60% of DQ leads are B2C retail",
+      action: "Exclude retail SIC codes in Apollo",
+    },
+  ],
+  rubric_gaps: [
+    {
+      type: "new_disqualifier",
+      finding: "Retail companies consistently DQ",
+      suggested_text: "DQ: Retail companies (SIC 5200-5999)",
+    },
+  ],
+};
+
+describe("exportMarkdown", () => {
+  it("includes the summary in the output", () => {
+    exportMarkdown(sampleRecommendations, 5);
+    expect(capturedContent).toContain("Most leads are small B2C companies.");
+  });
+
+  it("includes the batch lead count", () => {
+    exportMarkdown(sampleRecommendations, 5);
+    expect(capturedContent).toContain("5 Tier 3 + DQ leads analyzed");
+  });
+
+  it("includes sourcing suggestion category, finding, and action", () => {
+    exportMarkdown(sampleRecommendations, 5);
+    expect(capturedContent).toContain("**Industry**");
+    expect(capturedContent).toContain("60% of DQ leads are B2C retail");
+    expect(capturedContent).toContain("Exclude retail SIC codes in Apollo");
+  });
+
+  it("includes rubric gap type, finding, and suggested text", () => {
+    exportMarkdown(sampleRecommendations, 5);
+    expect(capturedContent).toContain("**new_disqualifier**");
+    expect(capturedContent).toContain("Retail companies consistently DQ");
+    expect(capturedContent).toContain("DQ: Retail companies (SIC 5200-5999)");
+  });
+
+  it("uses provided filename", () => {
+    exportMarkdown(sampleRecommendations, 3, "my-recs.md");
+    expect(capturedFilename).toBe("my-recs.md");
+  });
+
+  it("generates a date-based filename when none provided", () => {
+    exportMarkdown(sampleRecommendations, 3);
+    expect(capturedFilename).toMatch(/^lead-recommendations-\d{4}-\d{2}-\d{2}\.md$/);
   });
 });
