@@ -9,7 +9,7 @@ LLMs are better at nuanced ICP evaluation than rule-based scoring because they r
 1. Upload a CSV export from your CRM — any column structure works
 2. The app auto-detects name, email, company, and title columns
 
-   > **Any column not mapped to those four fields is passed to Claude as additional context.** More signal almost always improves accuracy. Claude can weight or ignore extra fields on its own — you don't need to pre-clean your export before uploading. Fields like tech stack, LinkedIn URL, funding round, employee count, and recent activity all sharpen the score without any configuration.
+> **Any column not mapped to those four fields is passed to Claude as additional context.** More signal almost always improves accuracy. Claude can weight or ignore extra fields on its own — you don't need to pre-clean your export before uploading. Fields like tech stack, LinkedIn URL, funding round, employee count, and recent activity all sharpen the score without any configuration.
 
 3. Each lead is scored in parallel against the rubric in `RUBRIC.md` using the Claude API
 4. Results show tier, score (0–100), confidence, rationale, matched ICP signals, and DQ flags
