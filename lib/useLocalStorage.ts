@@ -15,14 +15,13 @@ export function useLocalStorage<T>(
   });
 
   const setValue = (value: T) => {
-    try {
-      setStoredValue(value);
-      if (typeof window !== "undefined") {
+    setStoredValue(value);
+    if (typeof window !== "undefined") {
+      try {
         window.localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // storage full or unavailable — React state already updated
       }
-    } catch {
-      // localStorage full or unavailable — update React state only
-      setStoredValue(value);
     }
   };
 

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useLocalStorage } from "../useLocalStorage";
 
@@ -54,5 +54,16 @@ describe("useLocalStorage", () => {
     act(() => result.current[1](null));
     expect(result.current[0]).toBeNull();
     expect(JSON.parse(localStorage.getItem("key")!)).toBeNull();
+  });
+
+  it("updates state even when localStorage.setItem throws", () => {
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError");
+    });
+    const { result } = renderHook(() => useLocalStorage("key", "default"));
+    act(() => result.current[1]("updated"));
+    expect(result.current[0]).toBe("updated");
+    localStorage.setItem = originalSetItem;
   });
 });
