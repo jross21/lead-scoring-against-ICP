@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import Papa from "papaparse";
 import { mapColumns, applyMap, type ColumnMap, type MappedLead } from "@/lib/mapColumns";
 import { exportToCsv, exportMarkdown, type RecommendationsResponse } from "@/lib/exportCsv";
@@ -19,11 +20,11 @@ type ScoringResult = {
 };
 
 export default function Home() {
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [parsedLeads, setParsedLeads] = useState<MappedLead[]>([]);
-  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
-  const [columnMap, setColumnMap] = useState<ColumnMap | null>(null);
-  const [results, setResults] = useState<ScoringResult[]>([]);
+  const [fileName, setFileName] = useLocalStorage<string | null>("lt:fileName", null);
+  const [parsedLeads, setParsedLeads] = useLocalStorage<MappedLead[]>("lt:parsedLeads", []);
+  const [rawRows, setRawRows] = useLocalStorage<Record<string, string>[]>("lt:rawRows", []);
+  const [columnMap, setColumnMap] = useLocalStorage<ColumnMap | null>("lt:columnMap", null);
+  const [results, setResults] = useLocalStorage<ScoringResult[]>("lt:results", []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -31,7 +32,7 @@ export default function Home() {
     new Set(["1", "2", "3", "DQ"])
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [recommendations, setRecommendations] = useState<RecommendationsResponse | null>(null);
+  const [recommendations, setRecommendations] = useLocalStorage<RecommendationsResponse | null>("lt:recommendations", null);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
 
@@ -203,12 +204,27 @@ export default function Home() {
         {/* File info + column mapping badges */}
         {fileName && columnMap && (
           <div className="mb-4 space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg">
-              <span className="text-lg">✅</span>
-              <div>
-                <div className="font-medium text-sm text-gray-900">{fileName}</div>
-                <div className="text-xs text-gray-500">{parsedLeads.length} leads detected</div>
+            <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">✅</span>
+                <div>
+                  <div className="font-medium text-sm text-gray-900">{fileName}</div>
+                  <div className="text-xs text-gray-500">{parsedLeads.length} leads detected</div>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  setFileName(null);
+                  setParsedLeads([]);
+                  setRawRows([]);
+                  setColumnMap(null);
+                  setResults([]);
+                  setRecommendations(null);
+                }}
+                className="text-xs text-gray-400 hover:text-gray-700 underline"
+              >
+                Clear
+              </button>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
               <span className="text-xs text-gray-500 mr-1">Auto-mapped:</span>
