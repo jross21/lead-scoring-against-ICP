@@ -35,6 +35,13 @@ export default function Home() {
   const [recommendations, setRecommendations] = useLocalStorage<RecommendationsResponse | null>("lt:recommendations", null);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [hubspotLoading, setHubspotLoading] = useState(false);
+  const [hubspotResult, setHubspotResult] = useState<{ pushed: number } | null>(null);
+  const [hubspotError, setHubspotError] = useState<string | null>(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+  const [webhookResult, setWebhookResult] = useState<{ ok: boolean; status: number } | null>(null);
+  const [webhookError, setWebhookError] = useState<string | null>(null);
 
   const handleFile = (file: File) => {
     if (!file.name.endsWith(".csv")) {
@@ -79,6 +86,11 @@ export default function Home() {
     setResults([]);
     setRecommendations(null);
     setRecommendationsError(null);
+    setSelectedLeads(new Set());
+    setHubspotResult(null);
+    setHubspotError(null);
+    setWebhookResult(null);
+    setWebhookError(null);
 
     if (parsedLeads.length === 0) {
       setError("Upload a CSV file with at least one lead");
@@ -135,6 +147,62 @@ export default function Home() {
       setRecommendationsError(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setRecommendationsLoading(false);
+    }
+  };
+
+  const toggleLeadSelection = (email: string) => {
+    setSelectedLeads(prev => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email); else next.add(email);
+      return next;
+    });
+  };
+
+  const handleHubspotPush = async () => {
+    const leadsToSend = results.filter(r => !r.error && r.input.email && selectedLeads.has(r.input.email));
+    if (leadsToSend.length === 0) return;
+    setHubspotLoading(true);
+    setHubspotResult(null);
+    setHubspotError(null);
+    try {
+      const res = await fetch("/api/hubspot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leads: leadsToSend }),
+      });
+      const data = await res.json();
+      if (!res.ok) setHubspotError(data.error || "HubSpot push failed");
+      else setHubspotResult({ pushed: data.pushed });
+    } catch (e: unknown) {
+      setHubspotError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setHubspotLoading(false);
+    }
+  };
+
+  const handleWebhook = async () => {
+    if (results.length === 0) return;
+    setWebhookLoading(true);
+    setWebhookResult(null);
+    setWebhookError(null);
+    const tiers: Record<string, number> = {};
+    for (const r of results) { if (r.tier) tiers[r.tier] = (tiers[r.tier] ?? 0) + 1; }
+    try {
+      const res = await fetch("/api/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leads: results,
+          meta: { fileName: fileName ?? "unknown", total: results.length, tiers },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) setWebhookError(data.error || "Webhook failed");
+      else setWebhookResult({ ok: data.ok, status: data.status });
+    } catch (e: unknown) {
+      setWebhookError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setWebhookLoading(false);
     }
   };
 
@@ -220,6 +288,11 @@ export default function Home() {
                   setColumnMap(null);
                   setResults([]);
                   setRecommendations(null);
+                  setSelectedLeads(new Set());
+                  setHubspotResult(null);
+                  setHubspotError(null);
+                  setWebhookResult(null);
+                  setWebhookError(null);
                 }}
                 className="text-xs text-gray-400 hover:text-gray-700 underline"
               >
@@ -280,6 +353,24 @@ export default function Home() {
                   </button>
                 )}
                 <button
+                  type="button"
+                  onClick={handleHubspotPush}
+                  disabled={hubspotLoading || selectedLeads.size === 0}
+                  className="px-4 py-1.5 text-sm bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-orange-300 disabled:cursor-not-allowed"
+                >
+                  {hubspotLoading ? "Pushing…" : `Push to HubSpot (${selectedLeads.size})`}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleWebhook}
+                  disabled={webhookLoading || results.length === 0}
+                  className="px-4 py-1.5 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700 disabled:bg-violet-300 disabled:cursor-not-allowed"
+                >
+                  {webhookLoading ? "Sending…" : "Send to Webhook"}
+                </button>
+
+                <button
                   onClick={() => {
                     const filteredPairs = results
                       .map((r, i) => ({ r, raw: rawRows[i] }))
@@ -292,6 +383,29 @@ export default function Home() {
                 </button>
               </div>
             </div>
+
+            {hubspotResult && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md text-green-800 text-sm">
+                Pushed {hubspotResult.pushed} contact{hubspotResult.pushed !== 1 ? "s" : ""} to HubSpot
+              </div>
+            )}
+            {hubspotError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm flex items-center justify-between">
+                <span>HubSpot error: {hubspotError}</span>
+                <button type="button" onClick={handleHubspotPush} className="ml-4 underline text-red-700 hover:text-red-900">Retry</button>
+              </div>
+            )}
+            {webhookResult && (
+              <div className={`p-3 border rounded-md text-sm ${webhookResult.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-yellow-50 border-yellow-200 text-yellow-800"}`}>
+                {webhookResult.ok ? `Sent (${webhookResult.status})` : `Webhook responded with ${webhookResult.status}`}
+              </div>
+            )}
+            {webhookError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm flex items-center justify-between">
+                <span>Webhook error: {webhookError}</span>
+                <button type="button" onClick={handleWebhook} className="ml-4 underline text-red-700 hover:text-red-900">Retry</button>
+              </div>
+            )}
 
             {recommendationsError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm flex items-center justify-between">
@@ -397,11 +511,22 @@ export default function Home() {
                       {r.input.email} · {r.input.company}
                     </div>
                   </div>
-                  {r.tier && (
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${tierColor(r.tier)}`}>
-                      Tier {r.tier} · {r.score}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {r.tier && (
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${tierColor(r.tier)}`}>
+                        Tier {r.tier} · {r.score}
+                      </span>
+                    )}
+                    {!r.error && r.input.email && (
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 cursor-pointer accent-black"
+                        checked={selectedLeads.has(r.input.email)}
+                        onChange={() => toggleLeadSelection(r.input.email)}
+                        aria-label={`Select ${r.input.name || r.input.email}`}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {r.error ? (
