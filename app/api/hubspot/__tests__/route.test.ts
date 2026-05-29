@@ -117,7 +117,8 @@ describe("POST /api/hubspot", () => {
 
   it("returns { pushed, errors } on success", async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ results: [{}, {}], errors: [] }) });
-    const res = await POST(makeRequest({ leads: [validLead, validLead] }));
+    const secondLead = { ...validLead, input: { ...validLead.input, email: "bob@acme.com" } };
+    const res = await POST(makeRequest({ leads: [validLead, secondLead] }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.pushed).toBe(2);

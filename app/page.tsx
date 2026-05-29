@@ -396,7 +396,9 @@ export default function Home() {
             {hubspotError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm flex items-center justify-between">
                 <span>HubSpot error: {hubspotError}</span>
-                <button type="button" onClick={handleHubspotPush} className="ml-4 underline text-red-700 hover:text-red-900">Retry</button>
+                {!hubspotError.includes("batch limit") && (
+                  <button type="button" onClick={handleHubspotPush} className="ml-4 underline text-red-700 hover:text-red-900">Retry</button>
+                )}
               </div>
             )}
             {webhookResult && (
