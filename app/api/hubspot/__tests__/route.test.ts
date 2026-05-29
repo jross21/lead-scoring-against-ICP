@@ -87,6 +87,16 @@ describe("POST /api/hubspot", () => {
     expect(c.properties.lead_tier).toBe("1");
   });
 
+  it("deduplicates leads with the same email — only sends one", async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ results: [{ id: "123" }], errors: [] }) });
+
+    const res = await POST(makeRequest({ leads: [validLead, { ...validLead, score: 99 }] }));
+    expect(res.status).toBe(200);
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.inputs).toHaveLength(1);
+  });
+
   it("splits multi-word name: first word = firstname, rest = lastname", async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ results: [{}], errors: [] }) });
     const lead = { ...validLead, input: { ...validLead.input, name: "Mary Jane Watson" } };

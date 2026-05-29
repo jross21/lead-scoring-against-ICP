@@ -13,7 +13,15 @@ export async function POST(request) {
       return Response.json({ error: "Maximum 100 leads per request (HubSpot batch limit)" }, { status: 400 });
     }
 
-    const inputs = leads.map((result) => {
+    const seen = new Set();
+    const uniqueLeads = leads.filter(l => {
+      const email = l.input?.email;
+      if (!email || seen.has(email)) return false;
+      seen.add(email);
+      return true;
+    });
+
+    const inputs = uniqueLeads.map((result) => {
       const { name = "", email = "", company = "", title = "" } = result.input ?? {};
       const spaceIdx = name.indexOf(" ");
       const firstname = spaceIdx === -1 ? name : name.slice(0, spaceIdx);

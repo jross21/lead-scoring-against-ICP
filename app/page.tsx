@@ -161,6 +161,10 @@ export default function Home() {
   const handleHubspotPush = async () => {
     const leadsToSend = results.filter(r => !r.error && r.input.email && selectedLeads.has(r.input.email));
     if (leadsToSend.length === 0) return;
+    if (leadsToSend.length > 100) {
+      setHubspotError("HubSpot batch limit is 100 contacts. Deselect some leads and try again.");
+      return;
+    }
     setHubspotLoading(true);
     setHubspotResult(null);
     setHubspotError(null);
@@ -503,7 +507,7 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-gray-900">Results ({filteredResults.length})</h2>
 
             {filteredResults.map((r, i) => (
-              <div key={i} className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
+              <div key={r.input.email || i} className="bg-white p-5 rounded-md border border-gray-200 shadow-sm">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <div className="font-semibold">{r.input.name || "(no name)"}</div>
