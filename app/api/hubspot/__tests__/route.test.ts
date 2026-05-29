@@ -46,6 +46,12 @@ describe("POST /api/hubspot", () => {
     expect((await res.json()).error).toMatch(/non-empty/i);
   });
 
+  it("returns 400 when leads exceeds 100 (HubSpot batch limit)", async () => {
+    const res = await POST(makeRequest({ leads: Array(101).fill(validLead) }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/100/);
+  });
+
   it("returns 400 when leads is not an array", async () => {
     const res = await POST(makeRequest({ leads: "not an array" }));
     expect(res.status).toBe(400);

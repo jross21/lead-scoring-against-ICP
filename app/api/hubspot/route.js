@@ -9,6 +9,9 @@ export async function POST(request) {
     if (!Array.isArray(leads) || leads.length === 0) {
       return Response.json({ error: "Provide a non-empty array of leads" }, { status: 400 });
     }
+    if (leads.length > 100) {
+      return Response.json({ error: "Maximum 100 leads per request (HubSpot batch limit)" }, { status: 400 });
+    }
 
     const inputs = leads.map((result) => {
       const { name = "", email = "", company = "", title = "" } = result.input ?? {};
