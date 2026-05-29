@@ -37,6 +37,13 @@ describe("POST /api/webhook", () => {
     expect((await res.json()).error).toMatch(/WEBHOOK_URL/i);
   });
 
+  it("returns 400 when WEBHOOK_URL is not a valid URL", async () => {
+    process.env.WEBHOOK_URL = "not-a-url";
+    const res = await POST(makeRequest({ leads: [validLead], meta: validMeta }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/valid URL/i);
+  });
+
   it("returns 400 for empty leads array", async () => {
     const res = await POST(makeRequest({ leads: [], meta: validMeta }));
     expect(res.status).toBe(400);

@@ -402,8 +402,11 @@ export default function Home() {
               </div>
             )}
             {webhookResult && (
-              <div className={`p-3 border rounded-md text-sm ${webhookResult.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-yellow-50 border-yellow-200 text-yellow-800"}`}>
-                {webhookResult.ok ? `Sent (${webhookResult.status})` : `Webhook responded with ${webhookResult.status}`}
+              <div className={`p-3 border rounded-md text-sm flex items-center justify-between ${webhookResult.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-yellow-50 border-yellow-200 text-yellow-800"}`}>
+                <span>{webhookResult.ok ? `Sent (${webhookResult.status})` : `Webhook responded with ${webhookResult.status}`}</span>
+                {!webhookResult.ok && (
+                  <button type="button" onClick={handleWebhook} className="ml-4 underline text-yellow-700 hover:text-yellow-900">Retry</button>
+                )}
               </div>
             )}
             {webhookError && (
