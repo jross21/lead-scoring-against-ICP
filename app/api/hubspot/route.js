@@ -49,6 +49,6 @@ export async function POST(request) {
     return Response.json({ pushed: (data.results ?? []).length, errors: data.errors ?? [] });
   } catch (error) {
     console.error("HubSpot push error:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: "Internal error" }, { status: 500 });
   }
 }

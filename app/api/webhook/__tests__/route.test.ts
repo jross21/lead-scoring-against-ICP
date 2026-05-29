@@ -43,6 +43,12 @@ describe("POST /api/webhook", () => {
     expect((await res.json()).error).toMatch(/non-empty/i);
   });
 
+  it("returns 400 when leads exceeds 500", async () => {
+    const res = await POST(makeRequest({ leads: Array(501).fill(validLead), meta: validMeta }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/500/);
+  });
+
   it("returns 400 when leads is not an array", async () => {
     const res = await POST(makeRequest({ leads: "bad", meta: validMeta }));
     expect(res.status).toBe(400);
@@ -97,6 +103,6 @@ describe("POST /api/webhook", () => {
     mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
     const res = await POST(makeRequest({ leads: [validLead], meta: validMeta }));
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe("ECONNREFUSED");
+    expect((await res.json()).error).toBe("Internal error");
   });
 });

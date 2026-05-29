@@ -9,6 +9,9 @@ export async function POST(request) {
     if (!Array.isArray(leads) || leads.length === 0) {
       return Response.json({ error: "Provide a non-empty array of leads" }, { status: 400 });
     }
+    if (leads.length > 500) {
+      return Response.json({ error: "Maximum 500 leads per request" }, { status: 400 });
+    }
 
     const whResponse = await fetch(webhookUrl, {
       method: "POST",
@@ -19,6 +22,6 @@ export async function POST(request) {
     return Response.json({ ok: whResponse.ok, status: whResponse.status });
   } catch (error) {
     console.error("Webhook error:", error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: "Internal error" }, { status: 500 });
   }
 }

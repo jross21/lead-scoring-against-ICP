@@ -125,6 +125,6 @@ describe("POST /api/hubspot", () => {
     mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
     const res = await POST(makeRequest({ leads: [validLead] }));
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe("ECONNREFUSED");
+    expect((await res.json()).error).toBe("Internal error");
   });
 });
