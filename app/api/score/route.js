@@ -86,7 +86,7 @@ Return JSON matching exactly this schema:
   let parsed;
   try {
     parsed = JSON.parse(cleaned);
-  } catch (e) {
+  } catch {
     return {
       input: lead,
       error: "Claude returned invalid JSON",

@@ -74,7 +74,7 @@ Return JSON only, no preamble. Match this schema exactly:
     let parsed;
     try {
       parsed = JSON.parse(cleaned);
-    } catch (e) {
+    } catch {
       return Response.json(
         { error: "Claude returned invalid JSON", raw: textOutput },
         { status: 500 }

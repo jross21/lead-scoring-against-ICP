@@ -13,8 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lead Scoring Against ICP",
-  description: "Score inbound leads against your ICP rubric using Claude",
+  title: "LeadFit — ICP Lead Scoring Engine",
+  description:
+    "Score inbound leads against your Ideal Customer Profile in seconds. Upload a CRM export, get tiered fit scores, pipeline analytics, and upstream sourcing recommendations — powered by Claude.",
+  keywords: [
+    "RevOps",
+    "GTM engineering",
+    "lead scoring",
+    "ICP",
+    "sales operations",
+    "pipeline",
+  ],
+  openGraph: {
+    title: "LeadFit — ICP Lead Scoring Engine",
+    description:
+      "Tiered ICP fit scoring with pipeline analytics and sourcing recommendations.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -27,7 +42,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

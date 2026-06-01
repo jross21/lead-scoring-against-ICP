@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --background: #f8fafc; /* slate-50 */
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9; /* slate-100 */
+  --foreground: #0f172a; /* slate-900 */
+  --muted-foreground: #64748b; /* slate-500 */
+  --border: #e2e8f0; /* slate-200 */
+
+  /* Accent (indigo → violet) */
+  --accent: #4f46e5; /* indigo-600 */
+  --accent-hover: #4338ca; /* indigo-700 */
+  --accent-soft: #eef2ff; /* indigo-50 */
+
+  /* Tier semantic colors (hex used by charts) */
+  --tier-1: #16a34a; /* green-600 */
+  --tier-2: #d97706; /* amber-600 */
+  --tier-3: #64748b; /* slate-500 */
+  --tier-dq: #dc2626; /* red-600 */
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-tier-1: var(--tier-1);
+  --color-tier-2: var(--tier-2);
+  --color-tier-3: var(--tier-3);
+  --color-tier-dq: var(--tier-dq);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle entrance animation for results / dashboard sections */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 0%,
+    #e9eef5 20%,
+    var(--surface-muted) 40%
+  );
+  background-size: 936px 100%;
+  animation: shimmer 1.4s linear infinite;
 }

@@ -1,6 +1,8 @@
-# Lead Scoring Against ICP
+# LeadFit — ICP Lead Scoring Engine
 
-Score inbound leads against your ICP rubric using Claude. Upload a CSV from any CRM, get back Tier 1 / Tier 2 / Tier 3 / DQ scores with rationale, matched signals, and disqualifiers — then export the enriched CSV.
+Score inbound leads against your ICP rubric using Claude. Upload a CSV from any CRM and get back a pipeline-quality dashboard — Tier 1 / Tier 2 / Tier 3 / DQ scores with rationale, matched signals, and disqualifiers — plus fit charts, a qualification funnel, and upstream sourcing recommendations. Then export the enriched CSV.
+
+> **Want to see it without an API key?** Click **Try sample data** in the app to load a pre-scored batch of 20 realistic leads and explore the full dashboard instantly — no Anthropic key or network call required.
 
 LLMs are better at nuanced ICP evaluation than rule-based scoring because they read between the lines of incomplete data. A job title like "Head of People" at a Series B SaaS company means something a keyword match can't capture — it carries context about company stage, HR maturity, and budget authority that no regex will surface. The rubric-in-markdown design keeps scoring logic in version control, editable by anyone on the team without touching code. And it's the exact same artifact the model reads verbatim — what you write is what Claude scores against.
 
@@ -12,8 +14,9 @@ LLMs are better at nuanced ICP evaluation than rule-based scoring because they r
 > **Any column not mapped to those four fields is passed to Claude as additional context.** More signal almost always improves accuracy. Claude can weight or ignore extra fields on its own — you don't need to pre-clean your export before uploading. Fields like tech stack, LinkedIn URL, funding round, employee count, and recent activity all sharpen the score without any configuration.
 
 3. Each lead is scored in parallel against the rubric in `RUBRIC.md` using the Claude API
-4. Results show tier, score (0–100), confidence, rationale, matched ICP signals, and DQ flags
-5. Filter results by tier, then export the enriched CSV with all scoring columns appended to your original data
+4. Results roll up into a dashboard — qualification rate, average fit score, tier distribution, a confidence breakdown, and an Uploaded → Tier 1 funnel
+5. A sortable, filterable lead table shows tier, score (0–100), confidence, rationale, matched ICP signals, and DQ flags per lead
+6. Analyze the Tier 3 + DQ leads to get specific sourcing filters and suggested rubric tightenings, then export the enriched CSV with all scoring columns appended to your original data
 
 ## Prerequisites
 
