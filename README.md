@@ -1,5 +1,7 @@
 # LeadFit — ICP Lead Scoring Engine
 
+**[Read the case study →](https://julianross.dev/case-studies/lead-triage/)**
+
 Score inbound leads against your ICP rubric using Claude. Upload a CSV from any CRM and get back a pipeline-quality dashboard — Tier 1 / Tier 2 / Tier 3 / DQ scores with rationale, matched signals, and disqualifiers — plus fit charts, a qualification funnel, and upstream sourcing recommendations. Then export the enriched CSV.
 
 > **Want to see it without an API key?** Click **Try sample data** in the app to load a pre-scored batch of 20 realistic leads and explore the full dashboard instantly — no Anthropic key or network call required.
